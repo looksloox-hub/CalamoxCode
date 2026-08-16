@@ -1,3 +1,28 @@
+# === Node.js ===
+node_modules/
+coverage/
+*.log
+npm-debug.log*
+
+# === Python ===
+__pycache__/
+*.py[codz]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.env
+.env.local
+.env.*.local
+
+# === Calamox ===
+.calamox/
+
+# === OS ===
+.DS_Store
+
+# === Legacy template ===
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
