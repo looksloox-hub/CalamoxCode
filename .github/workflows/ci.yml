@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Calamox backend
+        run: pip install -e ".[all,dev]"
+
+      - name: Ruff lint
+        run: python -m ruff check calamox/
+
+      - name: Pytest
+        run: python -m pytest tests/ -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: calamox/frontend/package-lock.json
+
+      - name: Install frontend deps
+        working-directory: calamox/frontend
+        run: npm ci
+
+      - name: Build dashboard
+        working-directory: calamox/frontend
+        run: npm run build
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend + Playwright
+        run: |
+          pip install -e ".[all,dev]"
+          python -m playwright install --with-deps chromium
+
+      - name: UI smoke test (Jarvis Hub)
+        run: python scripts/ui_smoke.py --port 7860

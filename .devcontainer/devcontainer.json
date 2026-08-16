@@ -1,0 +1,12 @@
+{
+  "name": "Calamox AI",
+  "forwardPorts": [7860],
+  "portsAttributes": {
+    "7860": {
+      "label": "Calamox Dashboard",
+      "onAutoForward": "openBrowser",
+      "requireLocalPort": false
+    }
+  },
+  "postStartCommand": "pip install -e '.[all]' && cd calamox/frontend && npm install && npm run build && cd ../.. && python3 -m uvicorn calamox.backend.main:app --host 0.0.0.0 --port 7860 --log-level info &"
+}

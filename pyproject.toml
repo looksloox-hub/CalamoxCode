@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "calamox"
+version = "0.1.0"
+description = "Calamox AI — OS-level Jarvis assistant with multi-agent intelligence, browser automation, voice commands, and real-time dashboard UI."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Calamox Team"}]
+keywords = ["ai", "assistant", "multi-agent", "automation", "cli", "dashboard"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+ai = [
+    "litellm>=1.15.0",
+]
+browser = [
+    "playwright>=1.40.0",
+]
+voice = [
+    "pyttsx3>=2.90",
+    "edge-tts>=6.1.0",
+]
+all = [
+    "litellm>=1.15.0",
+    "playwright>=1.40.0",
+    "pyttsx3>=2.90",
+    "edge-tts>=6.1.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+calamox = "calamox.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["calamox*"]
+
+[tool.setuptools.package-data]
+calamox = [
+    "backend/agents_config.json",
+    "frontend/dist/**/*",
+    "frontend/dist/*",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"*.json" = ["E501"]  # long data strings in agent prompts
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

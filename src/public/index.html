@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calamox Bridge — Control Panel</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111a2e;
+      --panel-2: #16213a;
+      --border: #24324f;
+      --text: #e2e8f0;
+      --muted: #8ea0c0;
+      --accent: #38bdf8;
+      --green: #34d399;
+      --red: #f87171;
+      --amber: #fbbf24;
+      --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand .logo { font-size: 22px; }
+    .brand h1 { font-size: 18px; margin: 0; letter-spacing: 0.2px; }
+    .brand small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+    .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+    .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .pill.ok { color: var(--green); border-color: rgba(52, 211, 153, 0.4); }
+    .pill.ok .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .pill.bad { color: var(--red); border-color: rgba(248, 113, 113, 0.4); }
+    .pill.bad .dot { background: var(--red); }
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 22px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .panel h2 { margin: 0 0 14px; font-size: 16px; }
+    label { display: block; font-size: 12.5px; color: var(--muted); margin: 10px 0 4px; }
+    input[type="text"], input[type="password"], input[type="number"], textarea {
+      width: 100%;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      font-size: 14px;
+      font-family: var(--mono);
+      outline: none;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    textarea { resize: vertical; }
+    .row { display: flex; gap: 12px; }
+    .row > * { flex: 1; }
+    .check { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 14px; }
+    .check input { width: auto; }
+    button {
+      margin-top: 14px;
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #04121f;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter 0.15s;
+    }
+    button:hover { filter: brightness(1.1); }
+    button:disabled { opacity: 0.55; cursor: wait; }
+    .result { margin-top: 16px; border-top: 1px dashed var(--border); padding-top: 12px; }
+    .hidden { display: none !important; }
+    .meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: 13px; color: var(--muted); }
+    .badge {
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-family: var(--mono);
+      font-size: 12.5px;
+    }
+    .badge.ok { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+    .badge.err { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+    .badge.warn { background: rgba(251, 191, 36, 0.15); color: var(--amber); }
+    .out { margin-bottom: 10px; }
+    .out .label { font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.6px; }
+    pre {
+      margin: 0;
+      max-height: 240px;
+      overflow: auto;
+      background: #0a1120;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: var(--mono);
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    pre.stderr { color: #fda4af; }
+    #b-title { font-weight: 600; color: var(--text); }
+    #b-url { color: var(--accent); }
+    ul#b-links { margin: 0; padding-left: 18px; }
+    ul#b-links li { margin: 3px 0; font-size: 13px; }
+    ul#b-links a { color: var(--accent); word-break: break-all; }
+    #b-shot { width: 100%; border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; }
+    .error-box {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      color: #fecaca;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: var(--mono);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">👑</span>
+      <h1>Calamox Bridge <small>execution control panel</small></h1>
+    </div>
+    <div class="header-right">
+      <input id="token" type="password" placeholder="Bearer token (optional)" style="width: 200px" />
+      <span id="status" class="pill"><span class="dot"></span>checking…</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>⚡ System Exec</h2>
+      <label for="cmd">Command</label>
+      <textarea id="cmd" rows="4" placeholder="echo hello calamox&#10;npm test&#10;ls -la</textarea>
+      <div class="row">
+        <div>
+          <label for="cwd">Working directory</label>
+          <input id="cwd" type="text" placeholder="(server default)" />
+        </div>
+        <div>
+          <label for="timeout">Timeout (ms)</label>
+          <input id="timeout" type="number" value="120000" min="100" step="100" />
+        </div>
+      </div>
+      <label for="env">Environment (KEY=VALUE, one per line)</label>
+      <textarea id="env" rows="3" placeholder="DEBUG=1&#10;NODE_ENV=test"></textarea>
+      <button id="run">▶ Run command</button>
+      <div id="exec-result" class="result hidden">
+        <div class="meta">
+          <span id="exec-status" class="badge"></span>
+          <span id="exec-duration"></span>
+          <span id="exec-warn" class="warn"></span>
+        </div>
+        <div class="out"><div class="label">stdout</div><pre id="stdout"></pre></div>
+        <div class="out"><div class="label">stderr</div><pre id="stderr" class="stderr"></pre></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>🌐 Browser Open</h2>
+      <label for="url">URL</label>
+      <input id="url" type="text" placeholder="https://example.com" />
+      <div class="row">
+        <div class="check" style="align-self:end; padding-bottom:10px">
+          <input id="screenshot" type="checkbox" />
+          <label for="screenshot" style="margin:0">Full-page screenshot</label>
+        </div>
+        <div>
+          <label for="maxchars">Max text chars</label>
+          <input id="maxchars" type="number" value="200000" min="1000" step="1000" />
+        </div>
+      </div>
+      <button id="open">▶ Open page</button>
+      <div id="browser-result" class="result hidden">
+        <div class="meta"><span id="b-title"></span></div>
+        <div class="meta"><a id="b-url" target="_blank" rel="noopener"></a></div>
+        <div class="out"><div class="label">page text</div><pre id="b-text"></pre></div>
+        <div class="out"><div class="label">links</div><ul id="b-links"></ul></div>
+        <img id="b-shot" class="hidden" alt="page screenshot" />
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (id) => document.getElementById(id);
+      const tokenInput = $("token");
+      const statusPill = $("status");
+
+      tokenInput.value = localStorage.getItem("calamox.token") || "";
+      tokenInput.addEventListener("input", () => {
+        localStorage.setItem("calamox.token", tokenInput.value.trim());
+      });
+
+      function authHeaders() {
+        const t = tokenInput.value.trim();
+        return t ? { Authorization: `Bearer ${t}` } : {};
+      }
+
+      async function api(path, body) {
+        const res = await fetch(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify(body),
+        });
+        let data = null;
+        try { data = await res.json(); } catch { /* non-JSON response */ }
+        if (!res.ok) {
+          const detail = data && data.error ? data.error : `HTTP ${res.status}`;
+          throw new Error(detail + (data && data.detail ? ` — ${data.detail}` : ""));
+        }
+        return data;
+      }
+
+      function showError(target, err) {
+        target.innerHTML = `<div class="error-box">${escapeHtml(String(err.message || err))}</div>`;
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        }[c]));
+      }
+
+      // ---- Health polling ----
+      async function pollHealth() {
+        try {
+          const res = await fetch("/health");
+          if (res.ok) {
+            statusPill.className = "pill ok";
+            statusPill.innerHTML = '<span class="dot"></span>online';
+          } else {
+            throw new Error("bad status");
+          }
+        } catch {
+          statusPill.className = "pill bad";
+          statusPill.innerHTML = '<span class="dot"></span>offline';
+        }
+      }
+      pollHealth();
+      setInterval(pollHealth, 5000);
+
+      // ---- System exec ----
+      const runBtn = $("run");
+      runBtn.addEventListener("click", async () => {
+        const command = $("cmd").value.trim();
+        if (!command) return;
+        const env = {};
+        $("env").value.split("\n").forEach((line) => {
+          const idx = line.indexOf("=");
+          if (idx > 0) env[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+        });
+        const resultBox = $("exec-result");
+        resultBox.classList.remove("hidden");
+        $("exec-status").textContent = "running…";
+        $("exec-status").className = "badge warn";
+        $("exec-duration").textContent = "";
+        $("exec-warn").textContent = "";
+        $("stdout").textContent = "";
+        $("stderr").textContent = "";
+        runBtn.disabled = true;
+        runBtn.textContent = "Running…";
+        try {
+          const r = await api("/api/system/exec", {
+            command,
+            cwd: $("cwd").value.trim() || undefined,
+            timeoutMs: Number($("timeout").value) || undefined,
+            env: Object.keys(env).length ? env : undefined,
+          });
+          const badge = $("exec-status");
+          if (r.timedOut) {
+            badge.textContent = "TIMED OUT";
+            badge.className = "badge warn";
+          } else if (r.exitCode === 0) {
+            badge.textContent = `exit 0`;
+            badge.className = "badge ok";
+          } else {
+            badge.textContent = `exit ${r.exitCode ?? "?"}`;
+            badge.className = "badge err";
+          }
+          $("exec-duration").textContent = `${r.durationMs} ms`;
+          if (r.outputTruncated) $("exec-warn").textContent = "⚠ output truncated";
+          $("stdout").textContent = r.stdout || "(no stdout)";
+          $("stderr").textContent = r.stderr || "(no stderr)";
+        } catch (err) {
+          showError(resultBox, err);
+        } finally {
+          runBtn.disabled = false;
+          runBtn.textContent = "▶ Run command";
+        }
+      });
+
+      // ---- Browser open ----
+      const openBtn = $("open");
+      openBtn.addEventListener("click", async () => {
+        const url = $("url").value.trim();
+        if (!url) return;
+        const resultBox = $("browser-result");
+        resultBox.classList.remove("hidden");
+        $("b-title").textContent = "loading…";
+        $("b-url").textContent = "";
+        $("b-url").href = "#";
+        $("b-text").textContent = "";
+        $("b-links").innerHTML = "";
+        const shot = $("b-shot");
+        shot.classList.add("hidden");
+        shot.removeAttribute("src");
+        openBtn.disabled = true;
+        openBtn.textContent = "Opening…";
+        try {
+          const r = await api("/api/browser/open", {
+            url,
+            screenshot: $("screenshot").checked,
+            maxChars: Number($("maxchars").value) || undefined,
+          });
+          $("b-title").textContent = r.title || "(no title)";
+          $("b-url").textContent = r.url;
+          $("b-url").href = r.url;
+          $("b-text").textContent = r.text || "(no text)";
+          const list = $("b-links");
+          list.innerHTML = "";
+          (r.links || []).forEach((l) => {
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+            a.href = l.href;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.textContent = l.text || l.href;
+            a.title = l.href;
+            li.appendChild(a);
+            list.appendChild(li);
+          });
+          if (r.screenshotBase64) {
+            shot.src = `data:image/png;base64,${r.screenshotBase64}`;
+            shot.classList.remove("hidden");
+          }
+        } catch (err) {
+          showError(resultBox, err);
+        } finally {
+          openBtn.disabled = false;
+          openBtn.textContent = "▶ Open page";
+        }
+      });
+
+      // Ctrl/Cmd + Enter runs the command from the command box.
+      $("cmd").addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") runBtn.click();
+      });
+    })();
+  </script>
+</body>
+</html>
